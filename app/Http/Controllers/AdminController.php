@@ -57,6 +57,16 @@ class AdminController extends Controller
     public function setAdmin(User $user){
         $user->is_admin = true;
         $user->save();
+        
+        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
+        Log::info('Utente promosso ad amministratore', [
+            'admin_id' => auth()->id(),
+            'admin_name' => auth()->user()->name,
+            'target_user_id' => $user->id,
+            'target_user_name' => $user->name,
+            'ip' => request()->ip(),
+            'timestamp' => now()
+        ]);
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now administrator");
     }
@@ -64,6 +74,16 @@ class AdminController extends Controller
     public function setRevisor(User $user){
         $user->is_revisor = true;
         $user->save();
+        
+        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
+        Log::info('Utente promosso a revisore', [
+            'admin_id' => auth()->id(),
+            'admin_name' => auth()->user()->name,
+            'target_user_id' => $user->id,
+            'target_user_name' => $user->name,
+            'ip' => request()->ip(),
+            'timestamp' => now()
+        ]);
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now revisor");
     }
@@ -71,6 +91,16 @@ class AdminController extends Controller
     public function setWriter(User $user){
         $user->is_writer = true;
         $user->save();
+        
+        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
+        Log::info('Utente promosso a scrittore', [
+            'admin_id' => auth()->id(),
+            'admin_name' => auth()->user()->name,
+            'target_user_id' => $user->id,
+            'target_user_name' => $user->name,
+            'ip' => request()->ip(),
+            'timestamp' => now()
+        ]);
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now writer");
     }

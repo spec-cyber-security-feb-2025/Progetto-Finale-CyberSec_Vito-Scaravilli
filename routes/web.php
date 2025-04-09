@@ -10,13 +10,17 @@ use App\Http\Controllers\RevisorController;
 // Public routes
 Route::get('/', [PublicController::class, 'homepage'])->name('homepage');
 Route::get('/careers', [PublicController::class, 'careers'])->name('careers');
-Route::post('/careers/submit', [PublicController::class, 'careersSubmit'])->name('careers.submit');
+Route::middleware('rate_limit:careers.submit')->group(function() {
+    Route::post('/careers/submit', [PublicController::class, 'careersSubmit'])->name('careers.submit');
+});
 
 Route::get('/articles/index', [ArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/show/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 Route::get('/articles/category/{category}', [ArticleController::class, 'byCategory'])->name('articles.byCategory');
 Route::get('/articles/user/{user}', [ArticleController::class, 'byUser'])->name('articles.byUser');
-Route::get('/articles/search', [ArticleController::class, 'articleSearch'])->name('articles.search');
+Route::middleware('rate_limit:articles.search')->group(function() {
+    Route::get('/articles/search', [ArticleController::class, 'articleSearch'])->name('articles.search');
+});
 
 // Writer routes
 Route::middleware('writer')->group(function(){
@@ -39,9 +43,11 @@ Route::middleware('revisor')->group(function(){
 // Admin routes
 Route::middleware(['admin','admin.local'])->group(function(){
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/admin/{user}/set-admin', [AdminController::class, 'setAdmin'])->name('admin.setAdmin');
-    Route::get('/admin/{user}/set-revisor', [AdminController::class, 'setRevisor'])->name('admin.setRevisor');
-    Route::get('/admin/{user}/set-writer', [AdminController::class, 'setWriter'])->name('admin.setWriter');
+    
+    // Cambio da GET a POST per le operazioni critiche con protezione CSRF
+    Route::post('/admin/{user}/set-admin', [AdminController::class, 'setAdmin'])->name('admin.setAdmin');
+    Route::post('/admin/{user}/set-revisor', [AdminController::class, 'setRevisor'])->name('admin.setRevisor');
+    Route::post('/admin/{user}/set-writer', [AdminController::class, 'setWriter'])->name('admin.setWriter');
     
     Route::put('/admin/edit/tag/{tag}', [AdminController::class, 'editTag'])->name('admin.editTag');
     Route::delete('/admin/delete/tag/{tag}', [AdminController::class, 'deleteTag'])->name('admin.deleteTag');

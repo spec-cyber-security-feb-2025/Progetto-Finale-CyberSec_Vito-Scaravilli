@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\FrameGuard;
 use App\Http\Middleware\RateLimit;
+use App\Http\Middleware\ProtectCriticalOperations;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,12 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // $middleware->append(RateLimit::class);
+        $middleware->append(RateLimit::class);
         $middleware->alias([
             'admin' => App\Http\Middleware\UserIsAdmin::class,
             'revisor' => App\Http\Middleware\UserIsRevisor::class,
             'writer' => App\Http\Middleware\UserIsWriter::class,
-            'admin.local'=> App\Http\Middleware\OnlyLocalAdmin::class
+            'admin.local'=> App\Http\Middleware\OnlyLocalAdmin::class,
+            'rate_limit' => App\Http\Middleware\RateLimit::class,
+            'protect_critical' => App\Http\Middleware\ProtectCriticalOperations::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -1,4 +1,4 @@
-## Rate limiter mancante
+## 01-Rate limiter mancante
 
 ### Scenario:
 Creare ed eseguire uno script (es. in bash con curl) che lancia moltissime richieste sulla stessa rotta con il pericolo di un denial of service
@@ -8,6 +8,64 @@ Creare ed eseguire uno script (es. in bash con curl) che lancia moltissime richi
 - Rate limiter su /article/search
 - Rate limiter globale
 
+<!-- Ecco cosa ho fatto:
+
+1. Ho creato un nuovo middleware`RateLimit.php` che implementa tre livelli di protezione:
+   
+- Un rate limiter specifico per`/articles/search` che limita a 10 richieste al minuto per IP
+- Un rate limiter specifico per`/careers/submit` che limita a 3 richieste al minuto per IP
+- Un rate limiter globale che limita a 60 richieste al minuto per IP
+
+2. Ho attivato il middleware nel file`bootstrap/app.php` e registrato l'alias`rate_limit` per poterlo utilizzare nelle rotte
+
+3. Ho applicato il middleware alle rotte vulnerabili:
+
+- `/articles/search` con il limitatore specifico "articles.search"
+- `/careers/submit` con il limitatore specifico "careers.submit"
+
+4. Ho implementato il logging degli eventi di rate limiting per garantire l'accountability e la non-ripudiazione, registrando:
+   
+- Indirizzo IP
+- ID utente (se autenticato)
+- Percorso della richiesta
+- Tipo di limitatore attivato
+
+5. Ho aggiunto header HTTP alla risposta per informare i client sui limiti di richieste e sulle richieste rimanenti
+-->
+
+---------------------------------------------------------------------------------------------
+
+## 02-Operazioni critiche in post e non in get
+
+### Scenario: 
+Ci si espone a possibili attacchi CSRF portando in questo caso ad una vertical escalation of privileges.
+Provare un attacco csrf creando un piccolo server php che visualizzi una pagina html in cui in background scatta una chiamata ajax ad una rotta potenzialmente critica e non protetta (es. /admin/{user}/set-admin). Partendo dal browser dell'utente è possibile che l'azione vada in porto in quanto l'utente ha i privilegi adeguati.
+
+### Mitigazione
+Cambiare da get a post, facendo i dovuti controlli
+
+<!-- Per risolvere la challenge numero 2 relativa agli attacchi CSRF, ho implementato diverse misure di sicurezza:
+
+1. Ho creato un nuovo middleware`ProtectCriticalOperations` che verifica che le operazioni critiche siano eseguite solo tramite POST e registra i tentativi di accesso non autorizzati.
+
+2. Ho registrato il middleware nel file`bootstrap/app.php` con l'alias`protect_critical`.
+
+3. Ho modificato le rotte nel file`web.php` , cambiando i metodi da GET a POST per le operazioni critiche di modifica dei ruoli:
+   - `/admin/{user}/set-admin`
+   - `/admin/{user}/set-revisor`
+   - `/admin/{user}/set-writer`
+
+4. Ho aggiornato il componente`requests-table.blade.php` sostituendo i link GET con form POST per le operazioni di modifica dei ruoli, includendo il token CSRF per proteggere da attacchi cross-site request forgery.
+
+5. Ho implementato il logging delle operazioni critiche nel controller`AdminController.php` per garantire l'accountability e la non-ripudiazione, registrando:
+   
+- ID e nome dell'amministratore che esegue l'operazione
+- ID e nome dell'utente target
+- Indirizzo IP
+- Timestamp 
+-->
+
+-------------------------------------------------------------------------------------------
 ## Logging mancante per operazioni critiche
 
 ### Scenario:
@@ -18,15 +76,6 @@ Log di:
 - login/registrazione/logout
 - creazione/modifica/eliminazione articolo
 - assegnazione/cambi di ruolo
-
-## Operazioni critiche in post e non in get
-
-### Scenario: 
-Ci si espone a possibili attacchi CSRF portando in questo caso ad una vertical escalation of privileges.
-Provare un attacco csrf creando un piccolo server php che visualizzi una pagina html in cui in background scatta una chiamata ajax ad una rotta potenzialmente critica e non protetta (es. /admin/{user}/set-admin). Partendo dal browser dell'utente è possibile che l'azione vada in porto in quanto l'utente ha i privilegi adeguati.
-
-### Mitigazione
-Cambiare da get a post, facendo i dovuti controlli
 
 ## Uso non corretto di fillable nei modelli
 
@@ -57,5 +106,4 @@ Questo script verra memorizzato ed eseguito quando un utente visualizza l'artico
 Supponiamo che ci sia una misconfiguration a livello di CORS (config/cors.php) che quindi permetta richieste da domini esterni, utile quando frontend e backend sono separati ma se non opportunamente configurato risulta essere un grave problema.
 
 ### Mitigazione
-Creare un meccanismo che filtri il testo prima di salvarlo e per essere sicuri anche in fase di visualizzazione dell'articolo.
-
+Creare un meccanismo che filtri il testo prima di salvarlo e per essere sicuri anche in fase di visualizzazione dell'articolo
