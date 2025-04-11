@@ -55,52 +55,34 @@ class AdminController extends Controller
     }
 
     public function setAdmin(User $user){
+        $oldRole = $user->is_admin ? 'admin' : 'user';
         $user->is_admin = true;
         $user->save();
         
-        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
-        Log::info('Utente promosso ad amministratore', [
-            'admin_id' => auth()->id(),
-            'admin_name' => auth()->user()->name,
-            'target_user_id' => $user->id,
-            'target_user_name' => $user->name,
-            'ip' => request()->ip(),
-            'timestamp' => now()
-        ]);
+        // Utilizzo dell'helper AuditLogger per registrare la modifica del ruolo
+        \App\Helpers\AuditLogger::roleLog('promote_admin', $user, $oldRole, 'admin');
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now administrator");
     }
 
     public function setRevisor(User $user){
+        $oldRole = $user->is_revisor ? 'revisor' : 'user';
         $user->is_revisor = true;
         $user->save();
         
-        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
-        Log::info('Utente promosso a revisore', [
-            'admin_id' => auth()->id(),
-            'admin_name' => auth()->user()->name,
-            'target_user_id' => $user->id,
-            'target_user_name' => $user->name,
-            'ip' => request()->ip(),
-            'timestamp' => now()
-        ]);
+        // Utilizzo dell'helper AuditLogger per registrare la modifica del ruolo
+        \App\Helpers\AuditLogger::roleLog('promote_revisor', $user, $oldRole, 'revisor');
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now revisor");
     }
 
     public function setWriter(User $user){
+        $oldRole = $user->is_writer ? 'writer' : 'user';
         $user->is_writer = true;
         $user->save();
         
-        // Logging dell'operazione critica per garantire accountability e non-ripudiazione
-        Log::info('Utente promosso a scrittore', [
-            'admin_id' => auth()->id(),
-            'admin_name' => auth()->user()->name,
-            'target_user_id' => $user->id,
-            'target_user_name' => $user->name,
-            'ip' => request()->ip(),
-            'timestamp' => now()
-        ]);
+        // Utilizzo dell'helper AuditLogger per registrare la modifica del ruolo
+        \App\Helpers\AuditLogger::roleLog('promote_writer', $user, $oldRole, 'writer');
 
         return redirect(route('admin.dashboard'))->with('message', "$user->name is now writer");
     }

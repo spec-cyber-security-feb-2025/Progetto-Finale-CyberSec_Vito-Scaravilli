@@ -18,11 +18,19 @@ class ProtectCriticalOperations
     {
         // Verifica che le operazioni critiche siano eseguite solo tramite POST
         if ($request->isMethod('get')) {
-            // Registra il tentativo di accesso non autorizzato
-            Log::warning('Tentativo di accesso a operazione critica tramite GET', [
+            // Log del tentativo di accesso non autorizzato usando AuditLogger
+            \App\Helpers\AuditLogger::securityLog('csrf_attempt', [
                 'ip' => $request->ip(),
-                'user_id' => $request->user() ? $request->user()->id : 'non autenticato',
-                'path' => $request->path(),
+                'user_id' => $request->user() ? $request->user()->id : 'guest',
+                'route' => $request->path(),
+                'method' => $request->method()
+            ]);
+            
+            // Emetti anche un evento per il sistema di eventi
+            event('security.csrf_attempt', [
+                'ip' => $request->ip(),
+                'user_id' => $request->user() ? $request->user()->id : 'guest',
+                'route' => $request->path(),
                 'method' => $request->method()
             ]);
             

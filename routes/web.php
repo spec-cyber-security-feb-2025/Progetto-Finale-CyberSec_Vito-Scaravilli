@@ -45,9 +45,24 @@ Route::middleware(['admin','admin.local'])->group(function(){
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     
     // Cambio da GET a POST per le operazioni critiche con protezione CSRF
-    Route::post('/admin/{user}/set-admin', [AdminController::class, 'setAdmin'])->name('admin.setAdmin');
-    Route::post('/admin/{user}/set-revisor', [AdminController::class, 'setRevisor'])->name('admin.setRevisor');
-    Route::post('/admin/{user}/set-writer', [AdminController::class, 'setWriter'])->name('admin.setWriter');
+    Route::middleware('protect_critical')->group(function() {
+        Route::post('/admin/{user}/set-admin', [AdminController::class, 'setAdmin'])->name('admin.setAdmin');
+        Route::post('/admin/{user}/set-revisor', [AdminController::class, 'setRevisor'])->name('admin.setRevisor');
+        Route::post('/admin/{user}/set-writer', [AdminController::class, 'setWriter'])->name('admin.setWriter');
+    });
+    
+    // Aggiungiamo anche la protezione per le rotte GET corrispondenti
+    Route::middleware('protect_critical')->group(function() {
+        Route::get('/admin/{user}/set-admin', function() {
+            return redirect()->route('admin.dashboard');
+        });
+        Route::get('/admin/{user}/set-revisor', function() {
+            return redirect()->route('admin.dashboard');
+        });
+        Route::get('/admin/{user}/set-writer', function() {
+            return redirect()->route('admin.dashboard');
+        });
+    });
     
     Route::put('/admin/edit/tag/{tag}', [AdminController::class, 'editTag'])->name('admin.editTag');
     Route::delete('/admin/delete/tag/{tag}', [AdminController::class, 'deleteTag'])->name('admin.deleteTag');

@@ -46,16 +46,21 @@ class RateLimit
         );
 
         if (!$executed) {
-            // Log del tentativo di attacco
-            \Illuminate\Support\Facades\Log::warning(
-                'Rate limit exceeded', 
-                [
-                    'ip' => $request->ip(),
-                    'user_id' => $request->user() ? $request->user()->id : 'guest',
-                    'route' => $request->path(),
-                    'limiter' => $limiterName
-                ]
-            );
+            // Log del tentativo di attacco usando AuditLogger
+            \App\Helpers\AuditLogger::securityLog('rate_limit_exceeded', [
+                'ip' => $request->ip(),
+                'user_id' => $request->user() ? $request->user()->id : 'guest',
+                'route' => $request->path(),
+                'limiter' => $limiterName
+            ]);
+            
+            // Emetti anche un evento per il sistema di eventi
+            event('security.rate_limit_exceeded', [
+                'ip' => $request->ip(),
+                'user_id' => $request->user() ? $request->user()->id : 'guest',
+                'route' => $request->path(),
+                'limiter' => $limiterName
+            ]);
 
             return response()->json([
                 'message' => 'Troppe richieste. Riprova piu tardi.'

@@ -77,6 +77,8 @@ Log di:
 - creazione/modifica/eliminazione articolo
 - assegnazione/cambi di ruolo
 
+<!-- Per risolvere la challenge 3 sui log mancanti per operazioni critiche, ho implementato un sistema completo di audit logging che traccia tutte le operazioni sensibili nell'applicazione. Ho creato una tabella audit_logs tramite migrazione per memorizzare eventi come login, logout, registrazione, modifiche agli articoli e cambi di ruolo. Ho sviluppato il modello AuditLog per interagire con questa tabella e un helper AuditLogger che fornisce metodi semplici per registrare i vari tipi di eventi. Ho configurato l'EventServiceProvider per ascoltare gli eventi di autenticazione di Laravel e registrarli nella tabella. Ho modificato i controller (AdminController per i ruoli, ArticleController per gli articoli) e i middleware di sicurezza (RateLimit e ProtectCriticalOperations) per utilizzare l'helper AuditLogger invece dei log standard di Laravel. Questo sistema garantisce l'accountability e la non-ripudiazione, permettendo di tracciare chi ha fatto cosa e quando nel sistema. -->
+
 ## Uso non corretto di fillable nei modelli
 
 ### Scenario 
