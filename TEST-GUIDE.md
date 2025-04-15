@@ -148,6 +148,49 @@ Se il sistema di logging funziona correttamente:
 - I log conterranno informazioni dettagliate come IP, user agent, valori prima e dopo la modifica
 - I log saranno organizzati per tipo di azione (auth, role, security, ecc.)
 
+
+
+# Guida al Test dell'Attacco Mass Assignment
+
+Questa guida ti mostrerà come testare la vulnerabilità di mass assignment nella pagina del profilo utente dell'applicazione.
+
+## Cos'è un attacco Mass Assignment?
+
+Il mass assignment è una vulnerabilità che si verifica quando un'applicazione web permette l'assegnazione di massa di dati inviati dall'utente a modelli o oggetti senza un'adeguata protezione. Questo può consentire a un attaccante di modificare campi che non dovrebbero essere accessibili, come ad esempio i privilegi di amministratore.
+
+### Utilizzando gli strumenti di sviluppo del browser
+
+1. Accedi all'applicazione con il tuo account utente
+2. Vai alla pagina del profilo (http://localhost:8000/profile o l'URL corrispondente)
+3. Apri gli strumenti di sviluppo del browser premendo F12 (o tasto destro → Ispeziona)
+4. Seleziona la scheda "Elements" (o "Elementi")
+5. Trova il form di aggiornamento del profilo (cerca `<form action="/profile" method="POST">` o simile)
+6. Aggiungi un nuovo campo input nascosto all'interno del form con il seguente codice:
+   ```html
+   <input type="hidden" name="is_admin" value="1">
+   ```
+7. Puoi farlo facendo clic destro sul form, selezionando "Edit as HTML" e aggiungendo la riga sopra prima del tag `</form>`
+8. Compila normalmente gli altri campi del form (nome, email)
+9. Invia il form cliccando sul pulsante "Aggiorna profilo"
+
+
+## Come verificare se l'attacco ha avuto successo
+
+Se l'applicazione è vulnerabile al mass assignment, dopo aver eseguito uno dei metodi sopra descritti:
+
+1. Potresti notare nuove funzionalità o menu di amministrazione nell'interfaccia
+2. Prova ad accedere a URL riservati agli amministratori (es. /admin)
+3. Controlla il tuo profilo per vedere se il campo is_admin è stato modificato
+
+## Protezione contro il Mass Assignment
+
+Per proteggere un'applicazione dal mass assignment, gli sviluppatori dovrebbero:
+
+1. Utilizzare whitelist di attributi consentiti (fillable in Laravel)
+2. Utilizzare blacklist di attributi protetti (guarded in Laravel)
+3. Validare rigorosamente tutti gli input
+4. Utilizzare form request validation per controllare l'autorizzazione
+
 ## Conclusione
 
 Questi test ti permetteranno di verificare che le implementazioni di sicurezza del progetto funzionino correttamente. Se riscontri problemi o comportamenti inaspettati durante i test, controlla i log di sicurezza per ulteriori informazioni e verifica la configurazione delle misure di sicurezza.

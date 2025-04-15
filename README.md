@@ -33,7 +33,7 @@ Creare ed eseguire uno script (es. in bash con curl) che lancia moltissime richi
 5. Ho aggiunto header HTTP alla risposta per informare i client sui limiti di richieste e sulle richieste rimanenti
 -->
 
----------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 
 ## 02-Operazioni critiche in post e non in get
 
@@ -65,8 +65,9 @@ Cambiare da get a post, facendo i dovuti controlli
 - Timestamp 
 -->
 
--------------------------------------------------------------------------------------------
-## Logging mancante per operazioni critiche
+---------------------------------------------------------------------------------------------------------
+
+## 03-Logging mancante per operazioni critiche
 
 ### Scenario:
 Sui tentativi precedenti di DoS non si può risalire al colpevole violando il principiio di accountability e no repudiation
@@ -79,15 +80,9 @@ Log di:
 
 <!-- Per risolvere la challenge 3 sui log mancanti per operazioni critiche, ho implementato un sistema completo di audit logging che traccia tutte le operazioni sensibili nell'applicazione. Ho creato una tabella audit_logs tramite migrazione per memorizzare eventi come login, logout, registrazione, modifiche agli articoli e cambi di ruolo. Ho sviluppato il modello AuditLog per interagire con questa tabella e un helper AuditLogger che fornisce metodi semplici per registrare i vari tipi di eventi. Ho configurato l'EventServiceProvider per ascoltare gli eventi di autenticazione di Laravel e registrarli nella tabella. Ho modificato i controller (AdminController per i ruoli, ArticleController per gli articoli) e i middleware di sicurezza (RateLimit e ProtectCriticalOperations) per utilizzare l'helper AuditLogger invece dei log standard di Laravel. Questo sistema garantisce l'accountability e la non-ripudiazione, permettendo di tracciare chi ha fatto cosa e quando nel sistema. -->
 
-## Uso non corretto di fillable nei modelli
+---------------------------------------------------------------------------------------------------------
 
-### Scenario 
-Un utente malevolo può provare a indovinare campi tipici di ruoli utente tipo isAdmin, is_admin etc.. alterando il form dal browser 
-
-### Mitigazione
-Nella proprietà fillable del modello in questione inserire tutti solo i campi gestiti nel form
-
-## ssrf attack per api delle news
+## 04-ssrf attack per api delle news
 
 ### Scenario
 Esiste la funzionalità di suggerimento news recenti in fase di scrittura dell'articolo per prendere ispirazione. E' presente un menu a scelta facilmente alterabile da ispeziona elemento. L'utente malintenzionato con un minimo di conoscenza del sistema cambia l'url e prova a far lanciare al server una richiesta che lui non sarebbe autorizzato.
@@ -95,12 +90,34 @@ Per esempio il server recupera dei dati sugli utenti da un altro server in esecu
 
 
 ### Mitigazione
-Rimodellare la funzionalità in modo tale da non poter lasciare spazio di modifica dell'url da parte di utenti malevoli. Implementare o migliorare la validazione delgli input.
+Rimodellare la funzionalità in modo tale da non poter lasciare spazio di modifica dell'url da parte di utenti malevoli. Implementare o migliorare la validazione degli input.
 
 https://newsapi.org/docs/endpoints/top-headlines
 NewsAPI - api key 5fbe92849d5648eabcbe072a1cf91473
 
-## Stored XSS Attack
+<!-- Ho implementato diverse misure di sicurezza per prevenire attacchi SSRF (Server-Side Request Forgery) nell'applicazione:
+
+1. Miglioramento del servizio HttpService :
+   
+   - Rimosso "internal.finance" dai domini consentiti
+   - Limitato i protocolli consentiti solo a HTTPS
+   - Aggiunto blocco per intervalli IP privati e locali
+   - Implementato un metodo`isUrlSafe()` che verifica vari aspetti di sicurezza dell'URL
+   - Aggiunto controllo basato sui ruoli per l'accesso a risorse interne
+   - Migliorato gli header di sicurezza nelle richieste
+2. Rafforzamento del componente LatestNews :
+   
+   - Sostituito il sistema di selezione URL diretto con un sistema basato su codici paese
+   - Implementato un metodo`generateApiUrl()` che crea URL sicuri internamente
+   - Aggiunto validazione rigorosa dei paesi consentiti
+3. Modifica dell'interfaccia utente :
+   
+   - Rimossi gli URL completi dal menu a tendina, sostituendoli con semplici codici paese
+   - Eliminata la possibilità per l'utente di manipolare direttamente gli URL -->
+
+---------------------------------------------------------------------------------------------------------
+
+## 05-Stored XSS Attack
 
 ### Scenario
 Durante la creazione di un articlo si può manomettere il body della richiesta con un tool tipo burpsuite in modalità proxy in modo da evitare l'auto escape eseguito dall'editor stesso e far arrivare alla funzionalità di creazione articolo uno script malevelo nel testo.
@@ -109,3 +126,21 @@ Supponiamo che ci sia una misconfiguration a livello di CORS (config/cors.php) c
 
 ### Mitigazione
 Creare un meccanismo che filtri il testo prima di salvarlo e per essere sicuri anche in fase di visualizzazione dell'articolo
+
+---------------------------------------------------------------------------------------------------------
+
+## 06-Uso non corretto di fillable nei modelli
+
+### Scenario 
+Un utente malevolo può provare a indovinare campi tipici di ruoli utente tipo isAdmin, is_admin etc.. alterando il form dal browser 
+
+### Mitigazione
+Nella proprietà fillable del modello in questione inserire tutti solo i campi gestiti nel form
+
+<!-- Ecco i punti principali del passaggio 6 (Mitigazione Mass Assignment):
+
+1. Ho analizzato il modello User.php e identificato che i campi sensibili (is_admin, is_revisor, is_writer) erano inclusi nella proprietà $fillable, creando una vulnerabilità di mass assignment
+2. Ho rimosso questi campi sensibili dalla proprietà $fillable, limitandola solo ai campi che dovrebbero essere modificabili dall'utente (nome, email, password)
+3. Ho aggiunto i campi sensibili alla proprietà $guarded per impedire esplicitamente la loro assegnazione in massa
+4. Ho creato una pagina di profilo utente per dimostrare e testare la vulnerabilità prima della mitigazione
+5. Ho implementato una validazione più rigorosa nel controller UserProfileController per verificare esplicitamente quali campi vengono aggiornati -->

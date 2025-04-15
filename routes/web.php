@@ -6,6 +6,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\WriterController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\RevisorController;
+use App\Http\Controllers\UserProfileController;
 
 // Public routes
 Route::get('/', [PublicController::class, 'homepage'])->name('homepage');
@@ -41,6 +42,13 @@ Route::middleware('revisor')->group(function(){
 });
 
 // Admin routes
+// User profile routes
+Route::middleware('auth')->group(function(){
+    Route::get('/profile', [UserProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('profile.update-password');
+});
+
 Route::middleware(['admin','admin.local'])->group(function(){
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     

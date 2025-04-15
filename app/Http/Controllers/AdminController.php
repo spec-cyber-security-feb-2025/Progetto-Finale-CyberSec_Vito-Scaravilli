@@ -21,34 +21,62 @@ class AdminController extends Controller
     } 
 
     public function dashboard(){
+        Log::debug('[AdminController] Inizio metodo dashboard');
         $adminRequests = User::where('is_admin', NULL)->get();
         $revisorRequests = User::where('is_revisor', NULL)->get();
         $writerRequests = User::where('is_writer', NULL)->get();
+        
+        // Inizializza $financialData con una struttura vuota ma valida
+        $financialData = ['users' => []];
+        
+        Log::debug('[AdminController] Richieste utenti recuperate', [
+            'admin_requests' => count($adminRequests),
+            'revisor_requests' => count($revisorRequests),
+            'writer_requests' => count($writerRequests),
+            'user_id' => Auth::id()
+        ]);
 
         //$financialData = json_decode($this->httpService->getRequest('http://localhost:8001/financialApp/user-data.php'));
         
         try {
+            Log::debug('[AdminController] Tentativo di richiesta HTTP a internal.finance');
             // Effettua la richiesta HTTP
             $response = $this->httpService->getRequest('http://internal.finance:8001/user-data.php');
+            Log::debug('[AdminController] Risposta HTTP ricevuta', ['response_length' => strlen($response)]);
+            
             // Controlla se la risposta è vuota o non valida
-            if (empty($response)) {
-                throw new Exception('La risposta dalla richiesta HTTP è vuota.');
+            if (empty($response) || is_string($response) && strpos($response, 'Error') === 0) {
+                Log::error('[AdminController] Risposta HTTP vuota o errore');
+                throw new Exception('La risposta dalla richiesta HTTP è vuota o contiene un errore.');
             }
            
             // Decodifica il JSON
-            $financialData = json_decode($response, true);
+            $decodedData = json_decode($response, true);
 
             // Controlla se ci sono errori nella decodifica del JSON
             if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('[AdminController] Errore decodifica JSON', ['error' => json_last_error_msg()]);
                 throw new Exception('Errore nella decodifica del JSON: ' . json_last_error_msg());
             }
-        
-            // A questo punto, $financialData è un array associativo con i dati finanziari
-            // Puoi procedere con l'elaborazione dei dati
+            
+            // Verifica che i dati decodificati abbiano la struttura attesa
+            if (is_array($decodedData) && isset($decodedData['users'])) {
+                $financialData = $decodedData;
+                Log::debug('[AdminController] Dati finanziari decodificati con successo', [
+                    'users_count' => count($financialData['users'])
+                ]);
+            } else {
+                Log::error('[AdminController] Struttura dati non valida');
+                throw new Exception('La struttura dei dati finanziari non è valida.');
+            }
         } catch (Exception $e) {
             // Gestisci l'eccezione
-            echo 'Errore: ' . $e->getMessage();
-            // Puoi anche registrare l'errore in un log file o eseguire altre azioni di recupero
+            Log::error('[AdminController] Eccezione durante il recupero dei dati finanziari', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // Non mostriamo l'errore direttamente all'utente, ma lo registriamo solo nei log
+            // $financialData mantiene la struttura vuota ma valida inizializzata all'inizio
         }
         
         return view('admin.dashboard', compact('adminRequests', 'revisorRequests', 'writerRequests','financialData'));

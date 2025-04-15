@@ -66,6 +66,7 @@
             <div class="col-12">
                 
                     <h2>Financial Data</h2>
+                    @if(count($financialData['users']) > 0)
                     <table class="table table-striped table-hover">
                         <thead class="table-dark">
                             <tr>
@@ -76,9 +77,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                          
                             @foreach($financialData['users'] as $user)
-
                                 <tr>
                                     <td>{{ $user['username'] }}</td>
                                     <td>{{ $user['account_balance'] }}</td>
@@ -98,6 +97,11 @@
                             @endforeach
                         </tbody>
                     </table>
+                    @else
+                    <div class="alert alert-info">
+                        <p>Nessun dato finanziario disponibile al momento. Il servizio potrebbe essere temporaneamente non disponibile.</p>
+                    </div>
+                    @endif
                 
             </div>
         </div>
