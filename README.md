@@ -127,6 +127,39 @@ Supponiamo che ci sia una misconfiguration a livello di CORS (config/cors.php) c
 ### Mitigazione
 Creare un meccanismo che filtri il testo prima di salvarlo e per essere sicuri anche in fase di visualizzazione dell'articolo
 
+<!-- Soluzione Implementata
+1. Sanificazione in fase di salvataggio e modifica
+Abbiamo integrato la libreria HTMLPurifier per sanificare il campo body degli articoli sia in fase di creazione che di modifica.
+
+Come funziona:
+
+Ogni volta che un articolo viene creato o aggiornato, il testo viene passato attraverso HTMLPurifier, che rimuove o neutralizza tag e attributi HTML pericolosi.
+È possibile personalizzare i tag HTML permessi (ad esempio solo <p>, <b>, <a>, ecc.) per mantenere la formattazione desiderata e bloccare tutto il resto.
+Esempio di codice nel controller:
+
+php
+CopyInsert
+$config = HTMLPurifier_Config::createDefault();
+$purifier = new HTMLPurifier($config);
+$sanitizedBody = $purifier->purify($request->input('body'));
+
+Il valore sanificato viene poi salvato nel database:
+
+php
+CopyInsert
+'body' => $sanitizedBody,
+
+2. Applicazione sia in creazione che in modifica
+
+Funzione store: la sanificazione viene applicata prima di salvare un nuovo articolo.
+Funzione update: la sanificazione viene applicata anche quando un articolo viene modificato.
+
+Vantaggi della soluzione
+Protezione contro XSS persistente: nessun codice malevolo può essere salvato o aggiornato nel database tramite il campo body.
+Sicurezza anche contro attacchi avanzati: la sanificazione avviene lato server, quindi protegge anche da richieste manipolate via proxy come BurpSuite.
+Personalizzazione: è possibile scegliere quali tag HTML permettere, bilanciando sicurezza e formattazione.
+ -->
+
 ---------------------------------------------------------------------------------------------------------
 
 ## 06-Uso non corretto di fillable nei modelli

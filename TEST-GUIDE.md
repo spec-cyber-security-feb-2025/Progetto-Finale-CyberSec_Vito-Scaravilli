@@ -194,3 +194,8 @@ Per proteggere un'applicazione dal mass assignment, gli sviluppatori dovrebbero:
 ## Conclusione
 
 Questi test ti permetteranno di verificare che le implementazioni di sicurezza del progetto funzionino correttamente. Se riscontri problemi o comportamenti inaspettati durante i test, controlla i log di sicurezza per ulteriori informazioni e verifica la configurazione delle misure di sicurezza.
+
+## Test consigliati per l'attacco XSS:
+Durante la creazione di un nuovo Articolo,
+
+Prova a inserire payload come <script>alert('hacked')</script> o <img src=x onerror=alert(1)> in un articolo nel body o descrizione: questi verranno rimossi o resi innocui.

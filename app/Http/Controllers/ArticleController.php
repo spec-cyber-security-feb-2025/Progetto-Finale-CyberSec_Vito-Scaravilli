@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 
 class ArticleController extends Controller implements HasMiddleware
 {
@@ -53,12 +55,19 @@ class ArticleController extends Controller implements HasMiddleware
             'tags' => 'required'
         ]);
 
+        $config = HTMLPurifier_Config::createDefault();
+    // (Opzionale) Limita i tag ammessi:
+        // $config->set('HTML.Allowed', 'p,b,a[href],i,em,strong,ul,ol,li');
+
+        $purifier = new HTMLPurifier($config);
+        $sanitizedBody = $purifier->purify($request->input('body'));
+
         $article = Article::create([
-            'title' => $request->title,
-            'subtitle' => $request->subtitle,
-            'body' => $request->body,
+            'title' => $request->input('title'),
+            'subtitle' => $request->input('subtitle'),
+            'body' => $sanitizedBody,
             'image' => $request->file('image')->store('public/images'),
-            'category_id' => $request->category,
+            'category_id' => $request->input('category'),
             'user_id' => Auth::user()->id,
             'slug' => Str::slug($request->title),
         ]);
@@ -112,13 +121,19 @@ class ArticleController extends Controller implements HasMiddleware
             'tags' => 'required'
         ]);
 
-        $article->update([
-            'title' => $request->title,
-            'subtitle' => $request->subtitle,
-            'body' => $request->body,
-            'category_id' => $request->category,
-            'slug' => Str::slug($request->title),
-        ]);
+        $config = \HTMLPurifier_Config::createDefault();
+    // (Opzionale) Limita i tag ammessi:
+    // $config->set('HTML.Allowed', 'p,b,a[href],i,em,strong,ul,ol,li');
+    $purifier = new \HTMLPurifier($config);
+    $sanitizedBody = $purifier->purify($request->input('body'));
+
+    $article->update([
+        'title' => $request->input('title'),
+        'subtitle' => $request->input('subtitle'),
+        'body' => $sanitizedBody,
+        'category_id' => $request->input('category'),
+        'slug' => Str::slug($request->input('title')),
+    ]);
 
         if($request->image){
             Storage::delete($article->image);
